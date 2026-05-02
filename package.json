@@ -1,0 +1,28 @@
+{
+  "name": "claim-check-mcp",
+  "version": "0.1.0",
+  "description": "MCP server enforcing structural verification of analytical outputs. Exposes one tool, submit_verified_analysis, whose input schema makes claims and a confidence statement physically required.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "vercel dev",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "mcp-handler": "^1.1.0",
+    "zod": "^4.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@vercel/node": "^5.7.15",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
+  },
+  "license": "ISC"
+}
