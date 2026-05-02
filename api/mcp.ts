@@ -1,13 +1,22 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { Readable } from "node:stream";
 import { handler } from "../src/mcpServer.js";
 
 export const config = {
   maxDuration: 60,
 };
 
+type WithBody = IncomingMessage & { body?: unknown };
+
+function bodyToString(body: unknown): string | undefined {
+  if (body === undefined || body === null) return undefined;
+  if (typeof body === "string") return body;
+  if (Buffer.isBuffer(body)) return body.toString("utf8");
+  if (body instanceof Uint8Array) return Buffer.from(body).toString("utf8");
+  return JSON.stringify(body);
+}
+
 export default async function vercelNodeHandler(
-  req: IncomingMessage,
+  req: WithBody,
   res: ServerResponse
 ) {
   const proto = (req.headers["x-forwarded-proto"] as string) ?? "https";
@@ -29,17 +38,23 @@ export default async function vercelNodeHandler(
 
   const method = req.method ?? "GET";
 
-  let body: ReadableStream<Uint8Array> | undefined;
+  let body: string | undefined;
   if (method !== "GET" && method !== "HEAD") {
-    body = Readable.toWeb(req) as unknown as ReadableStream<Uint8Array>;
+    body = bodyToString(req.body);
+    if (body === undefined) {
+      const chunks: Buffer[] = [];
+      for await (const chunk of req as AsyncIterable<Buffer>) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      }
+      if (chunks.length > 0) body = Buffer.concat(chunks).toString("utf8");
+    }
   }
 
   const request = new Request(url, {
     method,
     headers,
     body,
-    duplex: body ? "half" : undefined,
-  } as RequestInit & { duplex?: "half" });
+  });
 
   let response: Response;
   try {
@@ -53,8 +68,7 @@ export default async function vercelNodeHandler(
         jsonrpc: "2.0",
         error: {
           code: -32603,
-          message:
-            err instanceof Error ? err.message : "Internal handler error",
+          message: err instanceof Error ? err.message : "Internal handler error",
         },
         id: null,
       })
