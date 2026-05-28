@@ -50,6 +50,24 @@ export default async function vercelNodeHandler(
     }
   }
 
+  // [TEMP DIAGNOSTIC — remove after fix confirmed] shape-only log of inbound tools/call args
+  if (body) {
+    try {
+      const parsed = JSON.parse(body);
+      if (parsed?.method === "tools/call") {
+        const args = parsed?.params?.arguments;
+        const argKeys = args && typeof args === "object" ? Object.keys(args) : null;
+        const claimsIsArray = Array.isArray(args?.claims);
+        const claimsLength = claimsIsArray ? args.claims.length : null;
+        console.log(
+          `[claim-check-mcp] tools/call name=${parsed?.params?.name} argKeys=${JSON.stringify(argKeys)} claimsIsArray=${claimsIsArray} claimsLength=${claimsLength}`
+        );
+      }
+    } catch {
+      // swallow — diagnostic only, never break the request path
+    }
+  }
+
   const request = new Request(url, {
     method,
     headers,

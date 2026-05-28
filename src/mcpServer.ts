@@ -1,5 +1,5 @@
 import { createMcpHandler } from "mcp-handler";
-import { SubmitInputShape, SubmitInputSchema } from "./schema.js";
+import { SubmitInputSchema } from "./schema.js";
 import { validateClaims } from "./validators/index.js";
 import { renderManifest } from "./render.js";
 
@@ -11,7 +11,7 @@ export const handler = createMcpHandler(
         title: "Submit verified analysis",
         description:
           "Submit an analytical output with sourced claims. Validates each claim's source reference (Linear IDs resolve, URLs return 200, file paths are absolute, inferred claims have premises). On success, returns the analysis rendered with a CLAIM CHECK manifest. On failure, returns a structured rejection with per-claim reasons and an instruction to resubmit.",
-        inputSchema: SubmitInputShape,
+        inputSchema: SubmitInputSchema,
       },
       async (rawInput) => {
         const parsed = SubmitInputSchema.safeParse(rawInput);
