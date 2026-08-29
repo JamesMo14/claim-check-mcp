@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { handler } from "../src/mcpServer.js";
+import { redactToken } from "../src/auth.js";
 
 export const config = {
   maxDuration: 60,
@@ -60,7 +61,11 @@ export default async function vercelNodeHandler(
   try {
     response = await handler(request);
   } catch (err) {
-    console.error("[claim-check-mcp] handler threw:", err);
+    // Redacted: a thrown error can carry the request URL, which may carry the token.
+    const detail = redactToken(
+      err instanceof Error ? (err.stack ?? err.message) : String(err)
+    );
+    console.error("[claim-check-mcp] handler threw:", detail);
     res.statusCode = 500;
     res.setHeader("content-type", "application/json");
     res.end(
@@ -68,7 +73,7 @@ export default async function vercelNodeHandler(
         jsonrpc: "2.0",
         error: {
           code: -32603,
-          message: err instanceof Error ? err.message : "Internal handler error",
+          message: err instanceof Error ? redactToken(err.message) : "Internal handler error",
         },
         id: null,
       })
