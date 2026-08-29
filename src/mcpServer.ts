@@ -1,9 +1,10 @@
 import { createMcpHandler } from "mcp-handler";
+import { withAuth } from "./auth.js";
 import { SubmitInputSchema } from "./schema.js";
 import { validateClaims } from "./validators/index.js";
 import { renderManifest } from "./render.js";
 
-export const handler = createMcpHandler(
+const mcpHandler = createMcpHandler(
   (server) => {
     server.registerTool(
       "submit_verified_analysis",
@@ -86,3 +87,9 @@ export const handler = createMcpHandler(
     verboseLogs: false,
   }
 );
+
+/**
+ * Every request passes shared-token auth (COG-1155) before it reaches the MCP
+ * transport. Fails closed when CLAIM_CHECK_TOKEN is unset.
+ */
+export const handler = withAuth(mcpHandler);
